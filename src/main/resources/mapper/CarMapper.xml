@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.onlineshop.mapper.CarMapper" >
+  <resultMap id="CarResultMap" type="Car" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="goods_id" property="goods_id" jdbcType="INTEGER" />
+    <result column="num" property="num" jdbcType="INTEGER" />
+    <result column="userid" property="userid" jdbcType="INTEGER" />
+    <result column="create_date" property="create_date" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="CarGoodsResultMap" type="Car" extends="CarResultMap" >
+    <association property="goods" javaType="Goods">
+      <result column="name" property="name" jdbcType="VARCHAR" />
+      <result column="imgpath" property="imgpath" jdbcType="VARCHAR" />
+      <result column="price" property="price" jdbcType="DOUBLE" />
+      </association>
+  </resultMap>
+  <select id="getCarListByUserId" parameterType="INTEGER" resultMap="CarGoodsResultMap">
+    select c.id,c.goods_id,c.num,c.userid,c.create_date,g.`id`,g.`name`,g.`goodsDesc`,g.`imgpath`,g.`price`
+    from `shopping_car` c ,`goods` g
+    where c.`userid` =#{userId,jdbcType=INTEGER} AND c.`goods_id` =g.`id`
+    order by create_date desc
+  </select>
+  <sql id="Car_Column_List" >
+    id, goods_id, num, userid, create_date
+  </sql>
+  <select id="selectCar" resultMap="CarResultMap" parameterType="Integer" >
+    select c.id,c.goods_id,c.num,c.userid,c.create_date,g.`name`,g.`imgpath`,g.`price`
+    from `shopping_car` c ,`goods` g
+    where c.`id` =#{id,jdbcType=INTEGER} AND c.`goods_id` =g.`id`
+    order by create_date desc
+  </select>
+  <delete id="deleteCar" parameterType="Integer" >
+    delete from shopping_car
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="Car" >
+    insert into shopping_car (id, goods_id, num, 
+      userid, create_date)
+    values (#{id,jdbcType=INTEGER}, #{goods_id,jdbcType=INTEGER}, #{num,jdbcType=INTEGER},
+      #{userid,jdbcType=INTEGER}, #{create_date,jdbcType=VARCHAR})
+  </insert>
+  <insert id="addCar" parameterType="Car" >
+    insert into shopping_car
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="goods_id != null" >
+        goods_id,
+      </if>
+      <if test="num != null" >
+        num,
+      </if>
+      <if test="userid != null" >
+        userid,
+      </if>
+      <if test="create_date != null" >
+        create_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="goods_id != null" >
+        #{goods_id,jdbcType=INTEGER},
+      </if>
+      <if test="num != null" >
+        #{num,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null" >
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="create_date != null" >
+        #{create_date,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateCar" parameterType="Car" >
+    update shopping_car
+    <set >
+      <if test="goods_id != null" >
+        goods_id = #{goods_id,jdbcType=INTEGER},
+      </if>
+      <if test="num != null" >
+        num = #{num,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null" >
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="create_date != null" >
+        create_date = #{create_date,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="Car" >
+    update shopping_car
+    set goods_id = #{goods_id,jdbcType=INTEGER},
+      num = #{num,jdbcType=INTEGER},
+      userid = #{userid,jdbcType=INTEGER},
+      create_date = #{create_date,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <sql id="conditionsSql">
+    <where>
+      <if test="userid != null and userid != ''">
+        AND userid LIKE CONCAT('%',#{userid,jdbcType=VARCHAR},'%')
+      </if>
+    </where>
+  </sql>
+  <select id="getCarList" parameterType="java.util.Map" resultMap="CarResultMap">
+    SELECT <include refid="Car_Column_List" />
+    FROM `shopping_car`
+    <include refid="conditionsSql" />
+    <bind name="offset" value="pageSize*(pageNo-1)"/>
+    LIMIT #{offset,jdbcType=INTEGER},#{pageSize,jdbcType=INTEGER}
+  </select>
+  <select id="getCount" parameterType="java.util.Map" resultType="Integer">
+    select count(id)
+    from `shopping_car`
+    <include refid="conditionsSql" />
+  </select>
+</mapper>

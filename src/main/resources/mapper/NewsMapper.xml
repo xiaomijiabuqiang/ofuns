@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.onlineshop.mapper.NewsMapper" >
+    <resultMap id="NewsResultMap" type="News" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="imgpath" property="imgpath" jdbcType="VARCHAR" />
+        <result column="newsDesc" property="newsDesc" jdbcType="VARCHAR" />
+        <result column="newsinfo" property="newsinfo" jdbcType="VARCHAR" />
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+    <sql id="News_Column_List" >
+    id,newsDesc,newsinfo,imgpath,createTime
+  </sql>
+    <select id="getNews" resultMap="NewsResultMap" parameterType="Integer" >
+        select
+        <include refid="News_Column_List" />
+        from news
+        where id = #{id,jdbcType=INTEGER}
+        order by createTime desc
+    </select>
+
+    <sql id="conditionsSql">
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+            </if>
+        </where>
+    </sql>
+    <select id="getNewsList" parameterType="java.util.Map" resultMap="NewsResultMap">
+        SELECT <include refid="News_Column_List" />
+        FROM `news`
+        <include refid="conditionsSql" />
+        <bind name="offset" value="pageSize*(pageNo-1)"/>
+        LIMIT #{offset,jdbcType=INTEGER},#{pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="getCount" parameterType="java.util.Map" resultType="Integer">
+        select count(id)
+        from `news`
+        <include refid="conditionsSql" />
+    </select>
+</mapper>

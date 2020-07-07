@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.onlineshop.mapper.OrderMapper">
+  <resultMap id="OrderResultMap" type="Order">
+    <id column="orderid" jdbcType="INTEGER" property="orderid" />
+    <result column="userid" jdbcType="INTEGER" property="userid" />
+    <result column="total" jdbcType="DOUBLE" property="total" />
+    <result column="paytype" jdbcType="INTEGER" property="paytype" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="shipname" jdbcType="VARCHAR" property="shipname" />
+    <result column="shipcode" jdbcType="VARCHAR" property="shipcode" />
+    <result column="createtime" jdbcType="TIMESTAMP" property="createtime" />
+    <result column="closetime" jdbcType="TIMESTAMP" property="closetime" />
+    <result column="addressId" jdbcType="INTEGER" property="addressId" />
+    <result column="orderNo" jdbcType="VARCHAR" property="orderNo" />
+  </resultMap>
+  <sql id="Order_Column_List">
+    orderid, userid, total, paytype, status, shipname, shipcode, createtime, closetime,addressId,orderNo
+  </sql>
+
+  <resultMap id="OrderUnionResultMap" type="Order" extends="OrderResultMap">
+    <association property="address" javaType="Address">
+      <result column="userid" property="userid" jdbcType="INTEGER" />
+      <result column="address" property="address" jdbcType="VARCHAR" />
+      <result column="createTime" property="createtime" jdbcType="TIMESTAMP" />
+      <result column="isDefault" property="isdefault" jdbcType="INTEGER" />
+      <result column="remark" property="remark" jdbcType="VARCHAR" />
+    </association>
+    <association property="user" javaType="User">
+      <result column="username" property="username" jdbcType="VARCHAR" />
+      <result column="phone" property="phone" jdbcType="VARCHAR" />
+    </association>
+    <collection property="orderDetailList" ofType="OrderDetail">
+      <result column="itemid" property="itemid" jdbcType="INTEGER" />
+      <result column="price" property="price" jdbcType="DOUBLE" />
+      <result column="num" property="num" jdbcType="INTEGER" />
+      <result column="total" property="total" jdbcType="DOUBLE" />
+      <association property="goods" javaType="Goods">
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="imgpath" property="imgpath" jdbcType="VARCHAR" />
+        <result column="price" property="price" jdbcType="DOUBLE" />
+      </association>
+    </collection>
+  </resultMap>
+  <select id="getOrderUnionListByOrderId" parameterType="java.lang.Integer" resultMap="OrderUnionResultMap">
+     SELECT
+        o.*,
+        ogd.itemid,ogd.price,ogd.num,ogd.total,
+        ua.address,
+        g.name,g.price,g.imgpath
+    FROM
+        `order` o,
+        `order_goods_detail`ogd,
+        `user_address` ua,
+        goods g
+    WHERE
+        o.addressId = ua.id
+        AND o.orderid = ogd.orderid
+        AND ogd.itemid = g.id
+        AND o.orderid = #{orderid,jdbcType=INTEGER};
+  </select>
+
+  <select id="getOrderUnionListByUserId" parameterType="java.lang.Integer" resultMap="OrderUnionResultMap">
+     SELECT
+        o.*,
+        ogd.itemid,ogd.price,ogd.num,ogd.total,
+        ua.address,
+        g.name,g.price,g.imgpath
+    FROM
+        `order` o,
+        `order_goods_detail`ogd,
+        `user_address` ua,
+        goods g
+    WHERE
+        o.addressId = ua.id
+        AND o.orderid = ogd.orderid
+        AND ogd.itemid = g.id
+        AND o.userid = #{userId,jdbcType=INTEGER};
+  </select>
+
+  <select id="getOrderByOrderId" parameterType="java.lang.Integer" resultMap="OrderResultMap">
+    select
+    <include refid="Order_Column_List" />
+    from `order`
+    where orderid = #{orderid,jdbcType=INTEGER}
+  </select>
+  <select id="getOrderByUserId" parameterType="java.lang.Integer" resultMap="OrderResultMap">
+    select
+    <include refid="Order_Column_List" />
+    from `order`
+    where userid = #{userid,jdbcType=INTEGER}
+    order by createtime desc
+  </select>
+  <delete id="deleteOrder" parameterType="java.lang.Integer">
+    delete from order
+    where orderid = #{orderid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="Order">
+    insert into order (orderid, userid, total, 
+      paytype, status, shipname, 
+      shipcode, createtime, closetime,
+      addressId,orderNo
+      )
+    values (#{orderid,jdbcType=INTEGER}, #{userid,jdbcType=INTEGER}, #{total,jdbcType=DOUBLE},
+      #{paytype,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{shipname,jdbcType=VARCHAR}, 
+      #{shipcode,jdbcType=VARCHAR}, #{createtime,jdbcType=TIMESTAMP}, #{closetime,jdbcType=TIMESTAMP},
+      #{addressId,jdbcType=INTEGER},#{orderNo,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="Order">
+    insert into order
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="orderid != null">
+        orderid,
+      </if>
+      <if test="userid != null">
+        userid,
+      </if>
+      <if test="total != null">
+        total,
+      </if>
+      <if test="paytype != null">
+        paytype,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="shipname != null">
+        shipname,
+      </if>
+      <if test="shipcode != null">
+        shipcode,
+      </if>
+      <if test="createtime != null">
+        createtime,
+      </if>
+      <if test="closetime != null">
+        closetime,
+      </if>
+      <if test="addressId != null">
+        addressId,
+      </if>
+      <if test="orderNo != null">
+        orderNo,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="orderid != null">
+        #{orderid,jdbcType=INTEGER},
+      </if>
+      <if test="userid != null">
+        #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="total != null">
+        #{total,jdbcType=DOUBLE},
+      </if>
+      <if test="paytype != null">
+        #{paytype,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="shipname != null">
+        #{shipname,jdbcType=VARCHAR},
+      </if>
+      <if test="shipcode != null">
+        #{shipcode,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="closetime != null">
+        #{closetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addressId != null">
+        #{addressId,jdbcType=INTEGER},
+      </if>
+      <if test="orderNo != null">
+        #{orderNo,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="Order">
+    update order
+    <set>
+      <if test="userid != null">
+        userid = #{userid,jdbcType=INTEGER},
+      </if>
+      <if test="total != null">
+        total = #{total,jdbcType=DOUBLE},
+      </if>
+      <if test="paytype != null">
+        paytype = #{paytype,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="shipname != null">
+        shipname = #{shipname,jdbcType=VARCHAR},
+      </if>
+      <if test="shipcode != null">
+        shipcode = #{shipcode,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null">
+        createtime = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="closetime != null">
+        closetime = #{closetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addressId != null">
+        #{addressId,jdbcType=INTEGER},
+      </if>
+      <if test="orderNo != null">
+        #{orderNo,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where orderid = #{orderid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="Order">
+    update order
+    set userid = #{userid,jdbcType=INTEGER},
+      total = #{total,jdbcType=DOUBLE},
+      paytype = #{paytype,jdbcType=INTEGER},
+      status = #{status,jdbcType=INTEGER},
+      shipname = #{shipname,jdbcType=VARCHAR},
+      shipcode = #{shipcode,jdbcType=VARCHAR},
+      createtime = #{createtime,jdbcType=TIMESTAMP},
+      closetime = #{closetime,jdbcType=TIMESTAMP},
+      adressId = #{adressId,jdbcType=INTEGER},
+      orderNo = #{orderNo,jdbcType=VARCHAR}
+    where orderid = #{orderid,jdbcType=INTEGER}
+  </update>
+
+  <sql id="conditionsSql">
+    <where>
+      <if test="userid != null and userid != ''">
+        AND userid LIKE CONCAT('%',#{userid,jdbcType=INTEGER},'%')
+      </if>
+      <if test="paytype != null and paytype != ''">
+        AND paytype = #{paytype,jdbcType=INTEGER}
+      </if>
+      <if test="status != null and status != ''">
+        AND status = #{status,jdbcType=INTEGER}
+      </if>
+      <if test="shipcode != null and shipcode != ''">
+        AND shipcode LiKE CONCAT('%',#{shipcode,jdbcType=VARCHAR},'%')
+      </if>
+    </where>
+  </sql>
+  <select id="getOrderList" parameterType="java.util.Map" resultMap="OrderResultMap">
+    SELECT <include refid="Order_Column_List" />
+    FROM `order`
+    <include refid="conditionsSql" />
+    <bind name="offset" value="pageSize*(pageNo-1)"/>
+    LIMIT #{offset,jdbcType=INTEGER},#{pageSize,jdbcType=INTEGER}
+  </select>
+  <select id="getCount" parameterType="java.util.Map" resultType="Integer">
+    select count(orderid)
+    from `order`
+    <include refid="conditionsSql" />
+  </select>
+</mapper>

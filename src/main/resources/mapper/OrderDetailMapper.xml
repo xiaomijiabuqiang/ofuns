@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.onlineshop.mapper.OrderDetailMapper" >
+  <resultMap id="OrderDetailResultMap" type="OrderDetail" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="itemid" property="itemid" jdbcType="INTEGER" />
+    <result column="orderid" property="orderid" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="DOUBLE" />
+    <result column="num" property="num" jdbcType="INTEGER" />
+    <result column="total" property="total" jdbcType="DOUBLE" />
+  </resultMap>
+
+  <sql id="OrderDetail_Column_List" >
+    id, itemid, orderid, price, num, total
+  </sql>
+
+  <resultMap id="OrderGoodsResultMap" type="OrderDetail" extends="OrderDetailResultMap">
+    <association property="order" javaType="Order">
+      <result column="userid" jdbcType="INTEGER" property="userid" />
+      <result column="total" jdbcType="DOUBLE" property="total" />
+      <result column="paytype" jdbcType="INTEGER" property="paytype" />
+      <result column="status" jdbcType="INTEGER" property="status" />
+      <result column="shipname" jdbcType="VARCHAR" property="shipname" />
+      <result column="shipcode" jdbcType="VARCHAR" property="shipcode" />
+      <result column="createtime" jdbcType="TIMESTAMP" property="createtime" />
+      <result column="closetime" jdbcType="TIMESTAMP" property="closetime" />
+      <result column="addressId" jdbcType="INTEGER" property="addressId" />
+      <result column="orderNo" jdbcType="VARCHAR" property="orderNo" />
+    </association>
+    <association property="goods" javaType="Goods">
+      <result column="name" property="name" jdbcType="VARCHAR" />
+      <result column="imgpath" property="imgpath" jdbcType="VARCHAR" />
+      <result column="price" property="price" jdbcType="DOUBLE" />
+    </association>
+  </resultMap>
+
+  <select id="getOrderDetail" resultMap="OrderGoodsResultMap" parameterType="java.lang.Integer" >
+    select ogd.itemid, ogd.orderid, ogd.price, ogd.num, ogd.total,o.*,g.*
+    from `order_goods_detail` ogd ,`order` o,goods g
+    where ogd.`orderid` =o.orderid
+    AND ogd.itemid = g.id
+    AND ogd.`id` =#{id,jdbcType=INTEGER}
+  </select>
+  <select id="getOrderDetailByOrderId" resultMap="OrderGoodsResultMap" parameterType="java.lang.Integer">
+    select ogd.itemid, ogd.orderid, ogd.price, ogd.num, ogd.total,o.*,g.*
+    from `order_goods_detail` ogd ,`order` o,goods g
+    where ogd.`orderid` =o.orderid
+    AND ogd.itemid = g.id
+    AND ogd.orderid = #{orderid,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteOrderDetail" parameterType="java.lang.Integer" >
+    delete from order_goods_detail
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="OrderDetail" >
+    insert into order_goods_detail (id, itemid, orderid, 
+      price, num, total)
+    values (#{id,jdbcType=INTEGER}, #{itemid,jdbcType=INTEGER}, #{orderid,jdbcType=INTEGER}, 
+      #{price,jdbcType=DOUBLE}, #{num,jdbcType=INTEGER}, #{total,jdbcType=DOUBLE})
+  </insert>
+  <insert id="addOrderDetail" parameterType="OrderDetail" >
+    insert into order_goods_detail
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="itemid != null" >
+        itemid,
+      </if>
+      <if test="orderid != null" >
+        orderid,
+      </if>
+      <if test="price != null" >
+        price,
+      </if>
+      <if test="num != null" >
+        num,
+      </if>
+      <if test="total != null" >
+        total,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="itemid != null" >
+        #{itemid,jdbcType=INTEGER},
+      </if>
+      <if test="orderid != null" >
+        #{orderid,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        #{price,jdbcType=DOUBLE},
+      </if>
+      <if test="num != null" >
+        #{num,jdbcType=INTEGER},
+      </if>
+      <if test="total != null" >
+        #{total,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateOrderDetail" parameterType="OrderDetail" >
+    update order_goods_detail
+    <set >
+      <if test="itemid != null" >
+        itemid = #{itemid,jdbcType=INTEGER},
+      </if>
+      <if test="orderid != null" >
+        orderid = #{orderid,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        price = #{price,jdbcType=DOUBLE},
+      </if>
+      <if test="num != null" >
+        num = #{num,jdbcType=INTEGER},
+      </if>
+      <if test="total != null" >
+        total = #{total,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="OrderDetail" >
+    update order_goods_detail
+    set itemid = #{itemid,jdbcType=INTEGER},
+      orderid = #{orderid,jdbcType=INTEGER},
+      price = #{price,jdbcType=DOUBLE},
+      num = #{num,jdbcType=INTEGER},
+      total = #{total,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <select id="getOrderDetailList" parameterType="java.util.Map" resultMap="OrderGoodsResultMap">
+    select ogd.itemid, ogd.orderid, ogd.price, ogd.num, ogd.total,o.*,g.*
+    from `order_goods_detail` ogd ,`order` o,goods g
+    where ogd.`orderid` =o.orderid
+    AND ogd.itemid = g.id
+    <bind name="offset" value="pageSize*(pageNo-1)"/>
+    LIMIT #{offset,jdbcType=INTEGER},#{pageSize,jdbcType=INTEGER}
+  </select>
+  <select id="getCount" parameterType="java.util.Map" resultType="Integer">
+    select count(id)
+    from `order_goods_detail`
+  </select>
+</mapper>
